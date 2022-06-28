@@ -1,0 +1,82 @@
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+ 
+const char* ssid = "*************";
+const char* password =  "YourNetworkPassword";
+const char* mqttServer = "*****************";
+const int mqttPort = 12948;
+const char* mqttUser = "YourMqttUser";
+const char* mqttPassword = "YourMqttUserPassword";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+
+float  ID = 900 ;
+
+void setup_wifi() {
+  delay(10);
+  // We start by connecting to a WiFi network
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("WiFi connected - ESP IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void setup() {
+  Serial.begin(115200);
+  setup_wifi();
+  client.setServer( mqttServer, 1883);
+  client.setCallback(callback);
+}
+
+
+
+void callback(char* topic, byte* message, unsigned int length) {
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  String messageTemp;
+  
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+  Serial.println();
+}
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (client.connect("ESP8266Client")) {
+      Serial.println("connected");
+      // Subscribe
+      
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+    //exemple 
+    char SMS[100]="your--------message";
+    client.publish("topic",SMS);
+    delay(10000); 
+  }
